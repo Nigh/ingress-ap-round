@@ -111,7 +111,7 @@ export function buildActions(
 			instruction: ACTION_LABELS.white,
 		},
 		{ kind: "hack", stepMax: 0, cost: c.hack, ap: [100], instruction: ACTION_LABELS.hack },
-		{ kind: "mod", stepMax: 0, cost: c.mod, ap: [150], instruction: ACTION_LABELS.mod },
+		{ kind: "mod", stepMax: 0, cost: c.mod, ap: [125], instruction: ACTION_LABELS.mod },
 		{ kind: "boost", stepMax: 4, cost: c.boost, ap: [500], instruction: ACTION_LABELS.boost },
 		{ kind: "link", stepMax: 0, cost: c.link, ap: [313], instruction: ACTION_LABELS.link },
 		{ kind: "field1", stepMax: 0, cost: c.field1, ap: [313 + 1250], instruction: ACTION_LABELS.field1 },
