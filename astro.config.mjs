@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 import AstroPWA from '@vite-pwa/astro';
 
 export default defineConfig({
+  site: 'https://nigh.github.io',
+  base: '/ingress-ap-round',
   integrations: [
     svelte(),
     AstroPWA({

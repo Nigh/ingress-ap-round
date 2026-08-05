@@ -24,6 +24,9 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
+# editor
+.vscode/
+
 # local Go reference (not published)
 ref/
 
