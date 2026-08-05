@@ -171,28 +171,29 @@
 			<ul class="divide-y divide-base-content/10">
 				{#each item.steps as step}
 					<li
-						class="flex items-baseline justify-between gap-3 py-2 text-sm"
-						class:rounded-lg={step.passcode}
-						class:bg-secondary/10={step.passcode}
-						class:px-2={step.passcode}
-						class:ring-1={step.passcode}
-						class:ring-secondary/40={step.passcode}
+						class="flex items-baseline justify-between gap-3 py-2 text-sm {step.passcode
+							? 'rounded-lg bg-secondary/10 px-2 ring-1 ring-secondary/40'
+							: ''}"
 					>
 						<div class="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-							<span class={step.passcode ? "font-semibold text-secondary" : "text-base-content"}
-								>{step.action}</span
-							>
+							<span class={step.passcode ? "font-semibold text-secondary" : "text-base-content"}>
+								{step.action}
+							</span>
 							<span
 								class="badge badge-sm font-mono {step.passcode
 									? 'badge-secondary'
-									: 'badge-ghost opacity-80'}">{step.qty}</span
+									: 'badge-ghost opacity-80'}"
 							>
+								{step.qty}
+							</span>
 						</div>
 						<span
 							class="shrink-0 font-mono text-sm tabular-nums {step.passcode
 								? 'font-semibold text-secondary'
-								: 'text-primary'}">+{step.ap}ap</span
+								: 'text-primary'}"
 						>
+							+{step.ap}ap
+						</span>
 					</li>
 				{/each}
 			</ul>
