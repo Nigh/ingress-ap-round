@@ -1,52 +1,73 @@
 import { type ApAction } from "./actions"
 import { type SolResult, apAt } from "./solver"
 
+export type StepRow = {
+	action: string
+	qty: string
+	ap: number
+	passcode?: boolean
+}
+
 function pl(i: number, name: string): string {
 	return i === 1 ? `${i} ${name}` : `${i} ${name}s`
 }
 
-function formatCapture(count: number, label: string, ap: number[]): string[] {
-	const lines: string[] = []
+function formatCapture(count: number, label: string, ap: number[]): StepRow[] {
+	const rows: StepRow[] = []
 	const full = Math.floor(count / 8)
 	const step = count % 8
 	if (full > 0) {
-		lines.push(`Capture ${pl(full, label)} with 8 Resonators +${ap[ap.length - 1] * full}ap`)
+		rows.push({
+			action: `Capture ${label}`,
+			qty: `${pl(full, "portal")} · 8 Resonators`,
+			ap: ap[ap.length - 1] * full,
+		})
 	}
 	if (step > 0) {
-		lines.push(`Capture 1 ${label} with ${pl(step, "Resonator")} +${ap[step - 1]}ap`)
+		rows.push({
+			action: `Capture ${label}`,
+			qty: `1 portal · ${pl(step, "Resonator")}`,
+			ap: ap[step - 1],
+		})
 	}
-	return lines
+	return rows
 }
 
-function formatHack(count: number, unit: number): string[] {
-	const lines: string[] = []
+function formatHack(count: number, unit: number): StepRow[] {
+	const rows: StepRow[] = []
 	const enemy = Math.floor(count / 2)
 	const allied = count % 2
-	if (enemy > 0) lines.push(`Hack Enemy Portal ${pl(enemy, "time")} +${unit * 2 * enemy}ap`)
-	if (allied > 0) lines.push(`Hack Allied Portal ${pl(allied, "time")} +${unit * allied}ap`)
-	return lines
+	if (enemy > 0) {
+		rows.push({ action: "Hack Enemy Portal", qty: `×${enemy}`, ap: unit * 2 * enemy })
+	}
+	if (allied > 0) {
+		rows.push({ action: "Hack Allied Portal", qty: `×${allied}`, ap: unit * allied })
+	}
+	return rows
 }
 
-export function formatSolution(actions: ApAction[], r: SolResult): string[] {
-	const lines: string[] = []
+export function formatSolution(actions: ApAction[], r: SolResult): StepRow[] {
+	const rows: StepRow[] = []
 	for (let i = 0; i < actions.length; i++) {
 		const n = r.sol[i] ?? 0
 		if (n <= 0) continue
 		const v = actions[i]
 		switch (v.kind) {
 			case "machina":
-				lines.push(...formatCapture(n, "Machina Portal", v.ap))
+				rows.push(...formatCapture(n, "Machina Portal", v.ap))
 				break
 			case "white":
-				lines.push(...formatCapture(n, "White Portal", v.ap))
+				rows.push(...formatCapture(n, "White Portal", v.ap))
 				break
 			case "hack":
-				lines.push(...formatHack(n, v.ap[0]))
+				rows.push(...formatHack(n, v.ap[0]))
 				break
 			default:
-				lines.push(`${v.instruction} ${pl(n, "time")} +${apAt(v, n)}ap`)
+				rows.push({ action: v.instruction, qty: `×${n}`, ap: apAt(v, n) })
 		}
 	}
-	if (r.passcode) lines.push("Get 1 AP passcode 1 time +1ap")
-	return lines
+	if (r.passcode) {
+		rows.push({ action: "Get 1 AP passcode", qty: "×1", ap: 1, passcode: true })
+	}
+	return rows
 }
