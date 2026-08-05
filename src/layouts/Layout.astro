@@ -3,6 +3,7 @@ import { ClientRouter } from 'astro:transitions';
 import { pwaInfo } from "virtual:pwa-info"
 import ReloadPrompt from "../components/ReloadPrompt.svelte"
 import ThemeToggle from "../components/ThemeToggle.svelte"
+import StarLink from "../components/StarLink.astro"
 import "../styles/global.css"
 
 interface Props {
@@ -41,6 +42,7 @@ const assetBaseUrl = baseUrl.replace(/\/$/, "")
 		{pwaInfo && <Fragment set:html={pwaInfo.webManifest.linkTag} />}
 	</head>
 	<body>
+		<StarLink />
 		<ThemeToggle client:load />
 		<slot />
 		<ReloadPrompt client:load />
