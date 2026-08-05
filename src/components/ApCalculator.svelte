@@ -17,7 +17,7 @@
 
 	let currentAp = $state(0)
 	let targetAp = $state(5777)
-	let isDouble = $state(true)
+	let isDouble = $state(false)
 	let costs = $state({ ...DEFAULT_COSTS })
 	let error = $state("")
 	let results = $state<{ result: SolResult; steps: StepRow[] }[]>([])
