@@ -34,7 +34,11 @@
 		const out: Partial<Record<ActionKind, number>> = {}
 		for (const k of ACTION_KINDS) {
 			const n = Math.trunc(Number(costs[k]))
-			out[k] = Number.isFinite(n) && n >= 1 ? n : DEFAULT_COSTS[k]
+			if (!Number.isFinite(n)) {
+				out[k] = DEFAULT_COSTS[k]
+			} else {
+				out[k] = Math.min(100, Math.max(1, n))
+			}
 		}
 		return out
 	}
@@ -50,10 +54,16 @@
 		}
 		const g = gapOf(cur, tgt)
 		const costMap = sanitizeCosts()
+		costs = { ...DEFAULT_COSTS, ...costMap } as typeof costs
 		busy = true
 		queueMicrotask(() => {
 			const actions = buildActions(isDouble, costMap)
-			const plans = computePlans(g, isDouble, 3, costMap)
+			const plans = computePlans(g, isDouble, 3, costMap).filter((r) => r.diff === 0)
+			if (plans.length === 0) {
+				error = "No exact solution for this gap."
+				busy = false
+				return
+			}
 			results = plans.map((r) => ({ result: r, steps: formatSolution(actions, r) }))
 			busy = false
 		})
@@ -119,7 +129,7 @@
 			<summary class="cursor-pointer px-3 py-2 text-sm font-medium">Action costs</summary>
 			<div class="flex flex-col gap-2 border-t border-base-content/10 px-3 py-3">
 				<p class="text-xs text-base-content/55">
-					Higher cost = planner avoids that action when possible.
+					Higher cost = planner avoids that action when possible (1–100).
 				</p>
 				{#each ACTION_KINDS as kind}
 					<label class="flex items-center justify-between gap-3 text-sm">
@@ -128,6 +138,8 @@
 							type="number"
 							class="input input-bordered input-sm w-20 font-mono"
 							min="1"
+							max="100"
+							step="1"
 							bind:value={costs[kind]}
 						/>
 					</label>
@@ -149,23 +161,38 @@
 
 	{#each results as item, i}
 		<article class="rounded-box bg-base-100 p-5 shadow-sm ring-1 ring-base-content/10">
-			<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+			<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
 				<h2 class="text-lg font-semibold">Solution {i + 1}</h2>
-				<p class="font-mono text-xs text-base-content/60">
-					diff={item.result.diff} · cost={item.result.cost} · ap={item.result.ap}
-				</p>
+				<div class="flex flex-wrap gap-1.5">
+					<span class="badge badge-ghost font-mono tabular-nums">cost {item.result.cost}</span>
+					<span class="badge badge-primary font-mono tabular-nums">+{item.result.ap} AP</span>
+				</div>
 			</div>
 			<ul class="divide-y divide-base-content/10">
 				{#each item.steps as step}
 					<li
 						class="flex items-baseline justify-between gap-3 py-2 text-sm"
-						class:text-secondary={step.passcode}
+						class:rounded-lg={step.passcode}
+						class:bg-secondary/10={step.passcode}
+						class:px-2={step.passcode}
+						class:ring-1={step.passcode}
+						class:ring-secondary/40={step.passcode}
 					>
 						<div class="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-							<span class="text-base-content">{step.action}</span>
-							<span class="badge badge-ghost badge-sm font-mono opacity-80">{step.qty}</span>
+							<span class={step.passcode ? "font-semibold text-secondary" : "text-base-content"}
+								>{step.action}</span
+							>
+							<span
+								class="badge badge-sm font-mono {step.passcode
+									? 'badge-secondary'
+									: 'badge-ghost opacity-80'}">{step.qty}</span
+							>
 						</div>
-						<span class="shrink-0 font-mono text-sm tabular-nums text-primary">+{step.ap}ap</span>
+						<span
+							class="shrink-0 font-mono text-sm tabular-nums {step.passcode
+								? 'font-semibold text-secondary'
+								: 'text-primary'}">+{step.ap}ap</span
+						>
 					</li>
 				{/each}
 			</ul>
