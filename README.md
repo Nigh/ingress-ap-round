@@ -1,33 +1,30 @@
 # Ingress AP Round
 
-PWA that plans Ingress actions from your current AP to a target.
+Plan in-game Ingress actions to earn a **specific amount of AP** — from your current total to a target.
 
-Built from [astro-pwa-template](https://github.com/Nigh/astro-pwa-template) (Astro + Svelte + Tailwind + DaisyUI).
+**Use it:** https://nigh.github.io/ingress-ap-round/
 
-## What it does
+## How to use
 
-- Inputs: **Current AP** and **Target AP** (`target > current`, gap ≤ **10000**)
-- Optional **Double AP** event mode
-- Per-action **cost** weights (planner prefers lower cost)
-- Up to **3** plans (exact hit preferred, then lower cost)
-- Under double AP, **odd** gaps force at most one official **1 AP passcode**
-- Exact solutions are **guaranteed** for gaps ≥ **1688** ( ≥ **3376** with Double AP); smaller gaps may still work
+1. Enter your **Current AP** and **Target AP** (target must be higher; the gap can be at most 10 000).
+2. Turn on **Double AP event** only if a Double AP event is active in-game (off by default).
+3. Optionally open **Action costs** and raise costs for actions you want to avoid (1–100). Reset restores defaults.
+4. Tap **Calculate**. You’ll get up to three exact plans. Actions have no required order.
 
-Solver runs entirely in the browser (grouped knapsack DP).
+Each plan shows a cost score (lower is “easier” for the planner) and the AP it adds. Rows list the action, how much to do, and AP gained. Under Double AP, an **odd** gap may include one official **1 AP passcode**.
 
-## Develop
+## When a solution is guaranteed
 
-```bash
-npm install
-npm run dev
-```
+- Normal: gap **≥ 1 688**
+- Double AP: gap **≥ 3 376**
 
-```bash
-npm run check:solver   # exact-hit / passcode self-check
-npm run build
-npm run preview
-```
+Smaller gaps often still work; if nothing exact exists, the app tells you.
 
-## PWA icons
+## Tips
 
-`public/pwa-192x192.png`, `public/pwa-512x512.png`, and `public/favicon.svg` are required for installability.
+- Star the [GitHub repo](https://github.com/Nigh/ingress-ap-round) from the top-left button if this helps you.
+- AP values follow the public Ingress Access Points tables (e.g. Deploy Mod = 125 AP).
+
+## Privacy
+
+Everything runs in your browser. Nothing is uploaded.
