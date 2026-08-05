@@ -1,15 +1,17 @@
 # Ingress AP Round
 
-PWA that plans Ingress actions to hit a farm-session AP gap.
+PWA that plans Ingress actions from your current AP to a target.
 
 Built from [astro-pwa-template](https://github.com/Nigh/astro-pwa-template) (Astro + Svelte + Tailwind + DaisyUI).
 
 ## What it does
 
-- Target AP in **[5000, 10000]** (one outing’s worth of farming)
+- Inputs: **Current AP** and **Target AP** (`target > current`, gap ≤ **10000**)
 - Optional **Double AP** event mode
-- Finds up to **3** low-cost action plans (exact hit preferred)
-- Under double AP, **odd** targets force at most one official **1 AP passcode** (not a normal action)
+- Per-action **cost** weights (planner prefers lower cost)
+- Up to **3** plans (exact hit preferred, then lower cost)
+- Under double AP, **odd** gaps force at most one official **1 AP passcode**
+- Exact solutions are **guaranteed** for gaps ≥ **1688** ( ≥ **3376** with Double AP); smaller gaps may still work
 
 Solver runs entirely in the browser (grouped knapsack DP).
 

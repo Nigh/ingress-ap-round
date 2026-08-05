@@ -1,5 +1,6 @@
-export const TARGET_MIN = 5000
-export const TARGET_MAX = 10000
+export const GAP_MAX = 10000
+export const GUARANTEED_GAP = 1688
+export const GUARANTEED_GAP_DOUBLE = 3376
 
 export type ActionKind =
 	| "machina"
@@ -23,16 +24,64 @@ export type ApAction = {
 	instruction: string
 }
 
-export function targetInRange(t: number): boolean {
-	return t >= TARGET_MIN && t <= TARGET_MAX
+export const DEFAULT_COSTS: Record<ActionKind, number> = {
+	machina: 4,
+	white: 2,
+	hack: 1,
+	mod: 2,
+	boost: 3,
+	link: 3,
+	field1: 4,
+	field2: 5,
+	res1: 3,
+	res27: 2,
+	res8: 3,
+	upgrade: 2,
 }
 
-export function buildActions(double: boolean): ApAction[] {
+export const ACTION_LABELS: Record<ActionKind, string> = {
+	machina: "Capture Machina Portal",
+	white: "Capture White Portal",
+	hack: "Hack Portal",
+	mod: "Deploy Mod",
+	boost: "Add a Boost to a portal",
+	link: "Create Non-Field Link",
+	field1: "Create 1 Field with 1 Link",
+	field2: "Create 2 Fields with 1 Link",
+	res1: "Deploy 1st Resonator",
+	res27: "Deploy 2nd-7th Resonator",
+	res8: "Deploy 8th Resonator",
+	upgrade: "Upgrade Resonator",
+}
+
+export const ACTION_KINDS = Object.keys(DEFAULT_COSTS) as ActionKind[]
+
+export function gapOf(current: number, target: number): number {
+	return target - current
+}
+
+/** target > current, both non-negative integers, gap in (0, GAP_MAX]. */
+export function gapValid(current: number, target: number): boolean {
+	if (!Number.isInteger(current) || !Number.isInteger(target)) return false
+	if (current < 0 || target < 0) return false
+	const g = gapOf(current, target)
+	return g > 0 && g <= GAP_MAX
+}
+
+export function guaranteedGap(double: boolean): number {
+	return double ? GUARANTEED_GAP_DOUBLE : GUARANTEED_GAP
+}
+
+export function buildActions(
+	double: boolean,
+	costs?: Partial<Record<ActionKind, number>>,
+): ApAction[] {
+	const c = { ...DEFAULT_COSTS, ...costs }
 	const out: ApAction[] = [
 		{
 			kind: "machina",
 			stepMax: 4,
-			cost: 4,
+			cost: c.machina,
 			ap: [
 				675 + 1331 + 125 * 1,
 				675 + 1331 + 125 * 2,
@@ -43,12 +92,12 @@ export function buildActions(double: boolean): ApAction[] {
 				675 + 1331 + 125 * 7,
 				675 + 1331 + 125 * 8 + 250,
 			],
-			instruction: "Capture Machina Portal",
+			instruction: ACTION_LABELS.machina,
 		},
 		{
 			kind: "white",
 			stepMax: 0,
-			cost: 2,
+			cost: c.white,
 			ap: [
 				675 + 125 * 1,
 				675 + 125 * 2,
@@ -59,18 +108,18 @@ export function buildActions(double: boolean): ApAction[] {
 				675 + 125 * 7,
 				675 + 125 * 8 + 250,
 			],
-			instruction: "Capture White Portal",
+			instruction: ACTION_LABELS.white,
 		},
-		{ kind: "hack", stepMax: 0, cost: 1, ap: [100], instruction: "Hack Portal" },
-		{ kind: "mod", stepMax: 0, cost: 2, ap: [150], instruction: "Deploy Mod" },
-		{ kind: "boost", stepMax: 4, cost: 3, ap: [500], instruction: "Add a Boost to a portal" },
-		{ kind: "link", stepMax: 0, cost: 3, ap: [313], instruction: "Create Non-Field Link" },
-		{ kind: "field1", stepMax: 0, cost: 4, ap: [313 + 1250], instruction: "Create 1 Field with 1 Link" },
-		{ kind: "field2", stepMax: 0, cost: 5, ap: [313 + 1250 * 2], instruction: "Create 2 Fields with 1 Link" },
-		{ kind: "res1", stepMax: 4, cost: 3, ap: [125 + 675], instruction: "Deploy 1st Resonator" },
-		{ kind: "res27", stepMax: 0, cost: 2, ap: [125], instruction: "Deploy 2nd-7th Resonator" },
-		{ kind: "res8", stepMax: 4, cost: 3, ap: [125 + 250], instruction: "Deploy 8th Resonator" },
-		{ kind: "upgrade", stepMax: 4, cost: 2, ap: [65], instruction: "Upgrade Resonator" },
+		{ kind: "hack", stepMax: 0, cost: c.hack, ap: [100], instruction: ACTION_LABELS.hack },
+		{ kind: "mod", stepMax: 0, cost: c.mod, ap: [150], instruction: ACTION_LABELS.mod },
+		{ kind: "boost", stepMax: 4, cost: c.boost, ap: [500], instruction: ACTION_LABELS.boost },
+		{ kind: "link", stepMax: 0, cost: c.link, ap: [313], instruction: ACTION_LABELS.link },
+		{ kind: "field1", stepMax: 0, cost: c.field1, ap: [313 + 1250], instruction: ACTION_LABELS.field1 },
+		{ kind: "field2", stepMax: 0, cost: c.field2, ap: [313 + 1250 * 2], instruction: ACTION_LABELS.field2 },
+		{ kind: "res1", stepMax: 4, cost: c.res1, ap: [125 + 675], instruction: ACTION_LABELS.res1 },
+		{ kind: "res27", stepMax: 0, cost: c.res27, ap: [125], instruction: ACTION_LABELS.res27 },
+		{ kind: "res8", stepMax: 4, cost: c.res8, ap: [125 + 250], instruction: ACTION_LABELS.res8 },
+		{ kind: "upgrade", stepMax: 4, cost: c.upgrade, ap: [65], instruction: ACTION_LABELS.upgrade },
 	]
 
 	if (double) {

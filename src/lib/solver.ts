@@ -1,4 +1,4 @@
-import { type ApAction, buildActions } from "./actions"
+import { type ActionKind, type ApAction, buildActions } from "./actions"
 
 export type SolResult = {
 	sol: number[]
@@ -165,8 +165,13 @@ export function alternatives(
 	return [primary, ...alts.slice(0, Math.max(0, want - 1))]
 }
 
-export function computePlans(target: number, double: boolean, want = 3): SolResult[] {
-	const actions = buildActions(double)
+export function computePlans(
+	target: number,
+	double: boolean,
+	want = 3,
+	costs?: Partial<Record<ActionKind, number>>,
+): SolResult[] {
+	const actions = buildActions(double, costs)
 	const primary = plan(actions, target, double, -1)
 	return alternatives(actions, target, double, primary, want)
 }
