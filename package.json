@@ -1,12 +1,13 @@
 {
-  "name": "astro-pwa-template",
+  "name": "ingress-ap-round",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check:solver": "tsx src/lib/selfcheck.ts"
   },
   "dependencies": {
     "@astrojs/svelte": "^8.1.2",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@vite-pwa/astro": "^1.2.0",
+    "tsx": "^4.20.5",
     "workbox-window": "^7.4.1"
   }
 }

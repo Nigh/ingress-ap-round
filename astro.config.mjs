@@ -10,11 +10,11 @@ export default defineConfig({
     AstroPWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Astro PWA Starter',
-        short_name: 'AstroPWA',
-        description: 'Astro + Svelte + Tailwind + DaisyUI PWA',
-        theme_color: '#353535',
-        background_color: '#353535',
+        name: 'Ingress AP Round',
+        short_name: 'AP Round',
+        description: 'Plan Ingress actions to hit a farm-session AP target',
+        theme_color: '#0d3d3a',
+        background_color: '#0d3d3a',
         display: 'standalone',
         icons: [
           {

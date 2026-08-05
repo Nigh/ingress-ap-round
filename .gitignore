@@ -23,3 +23,10 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# local Go reference (not published)
+ref/
+
+# local tooling
+graphify-out/
+.cursor/
