@@ -108,8 +108,9 @@ export function guaranteedGap(double: boolean): number {
 }
 
 function clampInt(n: number, lo: number, hi: number): number {
-	if (!Number.isFinite(n)) return lo
-	return Math.min(hi, Math.max(lo, Math.trunc(n)))
+	const x = typeof n === "number" ? n : Number(n)
+	if (!Number.isFinite(x)) return lo
+	return Math.min(hi, Math.max(lo, Math.trunc(x)))
 }
 
 export function clampNearby(p: NearbyPortal): NearbyPortal {

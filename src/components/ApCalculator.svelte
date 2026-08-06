@@ -20,16 +20,18 @@
 	import { formatSolution, type StepRow } from "../lib/format"
 	import { computePlans, type SolResult } from "../lib/solver"
 
-	const emptyPortal = (): NearbyPortal => ({ resonators: 8, mods: 0, links: 0 })
+	const RES_OPTS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const
+	const MOD_OPTS = [0, 1, 2, 3, 4] as const
+	const LINK_OPTS = [0, 1] as const
 
 	let currentAp = $state(0)
 	let targetAp = $state(5777)
 	let isDouble = $state(false)
 	let costs = $state({ ...DEFAULT_COSTS })
 	let useEnemy = $state(false)
-	let enemy = $state(emptyPortal())
+	let enemy = $state<NearbyPortal>({ resonators: 8, mods: 0, links: 0 })
 	let useMachina = $state(false)
-	let machina = $state(emptyPortal())
+	let machina = $state<NearbyPortal>({ resonators: 8, mods: 4, links: 0 })
 	let error = $state("")
 	let results = $state<{ result: SolResult; steps: StepRow[] }[]>([])
 	let checked = $state<boolean[][]>([])
@@ -191,36 +193,27 @@
 						<div class="mt-3 grid grid-cols-3 gap-2">
 							<label class="form-control">
 								<span class="label-text mb-1 text-xs">Resonators</span>
-								<input
-									type="number"
-									class="input input-bordered input-sm w-full font-mono"
-									min="0"
-									max="8"
-									step="1"
-									bind:value={enemy.resonators}
-								/>
+								<select class="select select-bordered select-sm w-full font-mono" bind:value={enemy.resonators}>
+									{#each RES_OPTS as n}
+										<option value={n}>{n}</option>
+									{/each}
+								</select>
 							</label>
 							<label class="form-control">
 								<span class="label-text mb-1 text-xs">Mods</span>
-								<input
-									type="number"
-									class="input input-bordered input-sm w-full font-mono"
-									min="0"
-									max="4"
-									step="1"
-									bind:value={enemy.mods}
-								/>
+								<select class="select select-bordered select-sm w-full font-mono" bind:value={enemy.mods}>
+									{#each MOD_OPTS as n}
+										<option value={n}>{n}</option>
+									{/each}
+								</select>
 							</label>
 							<label class="form-control">
 								<span class="label-text mb-1 text-xs">Links</span>
-								<input
-									type="number"
-									class="input input-bordered input-sm w-full font-mono"
-									min="0"
-									max="1"
-									step="1"
-									bind:value={enemy.links}
-								/>
+								<select class="select select-bordered select-sm w-full font-mono" bind:value={enemy.links}>
+									{#each LINK_OPTS as n}
+										<option value={n}>{n}</option>
+									{/each}
+								</select>
 							</label>
 						</div>
 						<p class="mt-2 font-mono text-xs tabular-nums text-base-content/60">
@@ -238,36 +231,27 @@
 						<div class="mt-3 grid grid-cols-3 gap-2">
 							<label class="form-control">
 								<span class="label-text mb-1 text-xs">Resonators</span>
-								<input
-									type="number"
-									class="input input-bordered input-sm w-full font-mono"
-									min="0"
-									max="8"
-									step="1"
-									bind:value={machina.resonators}
-								/>
+								<select class="select select-bordered select-sm w-full font-mono" bind:value={machina.resonators}>
+									{#each RES_OPTS as n}
+										<option value={n}>{n}</option>
+									{/each}
+								</select>
 							</label>
 							<label class="form-control">
 								<span class="label-text mb-1 text-xs">Mods</span>
-								<input
-									type="number"
-									class="input input-bordered input-sm w-full font-mono"
-									min="0"
-									max="4"
-									step="1"
-									bind:value={machina.mods}
-								/>
+								<select class="select select-bordered select-sm w-full font-mono" bind:value={machina.mods}>
+									{#each MOD_OPTS as n}
+										<option value={n}>{n}</option>
+									{/each}
+								</select>
 							</label>
 							<label class="form-control">
 								<span class="label-text mb-1 text-xs">Links</span>
-								<input
-									type="number"
-									class="input input-bordered input-sm w-full font-mono"
-									min="0"
-									max="1"
-									step="1"
-									bind:value={machina.links}
-								/>
+								<select class="select select-bordered select-sm w-full font-mono" bind:value={machina.links}>
+									{#each LINK_OPTS as n}
+										<option value={n}>{n}</option>
+									{/each}
+								</select>
 							</label>
 						</div>
 						<p class="mt-2 font-mono text-xs tabular-nums text-base-content/60">
