@@ -8,7 +8,7 @@ Plan in-game Ingress actions to earn a **specific amount of AP** — from your c
 
 1. Enter your **Current AP** and **Target AP** (target must be higher; the gap can be at most 10 000).
 2. Turn on **Double AP event** only if a Double AP event is active in-game (off by default).
-3. Optionally enable **Nearby portals** (at most one enemy and one Machina). Set resonators (0–8), mods (0–4), and links (0–1). The planner may clear that portal, then capture and deploy 1–8 resonators.
+3. Optionally enable **Nearby portals** (at most one enemy and one Machina). Pick resonators (0–8), mods (0–4), and links (0–1) from dropdowns. The planner may clear that portal, then capture and deploy 1–8 resonators.
 4. Optionally open **Action costs** and raise costs for actions you want to avoid (1–100). Reset restores defaults.
 5. Tap **Calculate**. You’ll get up to three exact plans.
 
