@@ -20,9 +20,9 @@ Repo: https://github.com/Nigh/ingress-ap-round
 - Template origin: `Nigh/astro-pwa-template`
 - Node **24+** for CI (`npm ci` / `npm run build`)
 - Deploy: GitHub Pages on push to `main` — [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)  
-  Build with Node 24, write `dist/.nojekyll`, then force-push `dist/` to the `gh-pages` branch (Pages source: `gh-pages` / `/`).  
-  Does **not** use `actions/deploy-pages` (intermittently stuck at `deployment_queued`; see [actions/deploy-pages#406](https://github.com/actions/deploy-pages/issues/406)).  
-  `.nojekyll` is required so Jekyll does not drop `_astro/`.
+  Actions: `checkout@v7`, `setup-node@v7`, `upload-pages-artifact@v5`, `deploy-pages@v5`  
+  Deploy retries once after 90s if Pages sticks at `deployment_queued` ([actions/deploy-pages#406](https://github.com/actions/deploy-pages/issues/406)).  
+  Repo Pages **build type** must be **GitHub Actions** (not branch). `gh-pages` branch pushes are unused while Actions deploy works.
 - Astro `site`: `https://nigh.github.io`, `base`: `/ingress-ap-round`
 
 ## Layout (source of truth)
