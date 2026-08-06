@@ -21,10 +21,12 @@
 	let costs = $state({ ...DEFAULT_COSTS })
 	let error = $state("")
 	let results = $state<{ result: SolResult; steps: StepRow[] }[]>([])
+	let checked = $state<boolean[][]>([])
 	let busy = $state(false)
 
 	let gap = $derived(gapOf(Math.trunc(Number(currentAp)), Math.trunc(Number(targetAp))))
 	let guarantee = $derived(guaranteedGap(isDouble))
+	let curAp = $derived(Math.trunc(Number(currentAp)) || 0)
 
 	function resetCosts() {
 		costs = { ...DEFAULT_COSTS }
@@ -43,9 +45,21 @@
 		return out
 	}
 
+	function checkedAp(solIdx: number): number {
+		const item = results[solIdx]
+		const flags = checked[solIdx]
+		if (!item || !flags) return 0
+		let sum = 0
+		for (let j = 0; j < item.steps.length; j++) {
+			if (flags[j]) sum += item.steps[j].ap
+		}
+		return sum
+	}
+
 	function calculate() {
 		error = ""
 		results = []
+		checked = []
 		const cur = Math.trunc(Number(currentAp))
 		const tgt = Math.trunc(Number(targetAp))
 		if (!gapValid(cur, tgt)) {
@@ -65,6 +79,7 @@
 				return
 			}
 			results = plans.map((r) => ({ result: r, steps: formatSolution(actions, r) }))
+			checked = results.map((item) => item.steps.map(() => false))
 			busy = false
 		})
 	}
@@ -160,6 +175,7 @@
 	</section>
 
 	{#each results as item, i}
+		{@const done = checkedAp(i)}
 		<article class="rounded-box bg-base-100 p-5 shadow-sm ring-1 ring-base-content/10">
 			<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
 				<h2 class="text-lg font-semibold">Solution {i + 1}</h2>
@@ -168,32 +184,53 @@
 					<span class="badge badge-primary font-mono tabular-nums">+{item.result.ap} AP</span>
 				</div>
 			</div>
+			<p class="mb-2 font-mono text-sm tabular-nums text-base-content/70">
+				Checked +{done} AP · should be at
+				<span class="font-semibold text-base-content">{curAp + done}</span>
+			</p>
 			<ul class="divide-y divide-base-content/10">
-				{#each item.steps as step}
+				{#each item.steps as step, j}
 					<li
-						class="flex items-baseline justify-between gap-3 py-2 text-sm {step.passcode
-							? 'rounded-lg bg-secondary/10 px-2 ring-1 ring-secondary/40'
+						class="{step.passcode
+							? 'rounded-lg bg-secondary/10 ring-1 ring-secondary/40'
 							: ''}"
 					>
-						<div class="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-							<span class={step.passcode ? "font-semibold text-secondary" : "text-base-content"}>
-								{step.action}
+						<label
+							class="flex cursor-pointer items-baseline justify-between gap-3 py-2 text-sm {step.passcode
+								? 'px-2'
+								: ''} {checked[i]?.[j] ? 'opacity-60' : ''}"
+						>
+							<span class="flex min-w-0 items-baseline gap-2">
+								<input
+									type="checkbox"
+									class="checkbox checkbox-sm shrink-0 translate-y-0.5"
+									bind:checked={checked[i][j]}
+								/>
+								<span class="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+									<span
+										class={step.passcode
+											? "font-semibold text-secondary"
+											: "text-base-content"}
+									>
+										{step.action}
+									</span>
+									<span
+										class="badge badge-sm font-mono {step.passcode
+											? 'badge-secondary'
+											: 'badge-ghost opacity-80'}"
+									>
+										{step.qty}
+									</span>
+								</span>
 							</span>
 							<span
-								class="badge badge-sm font-mono {step.passcode
-									? 'badge-secondary'
-									: 'badge-ghost opacity-80'}"
+								class="shrink-0 font-mono text-sm tabular-nums {step.passcode
+									? 'font-semibold text-secondary'
+									: 'text-primary'}"
 							>
-								{step.qty}
+								+{step.ap}ap
 							</span>
-						</div>
-						<span
-							class="shrink-0 font-mono text-sm tabular-nums {step.passcode
-								? 'font-semibold text-secondary'
-								: 'text-primary'}"
-						>
-							+{step.ap}ap
-						</span>
+						</label>
 					</li>
 				{/each}
 			</ul>

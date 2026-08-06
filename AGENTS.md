@@ -48,6 +48,7 @@ Repo: https://github.com/Nigh/ingress-ap-round
 - Odd gap + Double AP: force **at most one** official **1 AP passcode** (not a knapsack item; special UI row).
 - Action **cost** weights: integers **1–100**, defaults in `DEFAULT_COSTS`; higher → planner avoids when possible.
 - Show up to **3** plans; **only `diff === 0`**. Header shows cost / AP badges, not diff.
+- Solution steps are **checkboxes**. Checked AP sum + current AP is shown as expected total (“should be at”) for in-game verification.
 - Mod AP is **125** (wiki: Applying a Portal Mod). Other base AP values align with Ingress Access Points wiki (capture 675, resonator 125, complete +250, upgrade 65, link 313, field 1250, allied hack 100 / enemy 200, Machina recapture +1331, boost/beacon 500).
 
 ## Solver
