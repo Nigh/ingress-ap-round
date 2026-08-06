@@ -43,8 +43,20 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
     steps:
+      # Pages API intermittently sticks at deployment_queued (actions/deploy-pages#406).
+      # First attempt may time out and cancel; a second try often succeeds.
       - name: Deploy
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+
+      - name: Wait before retry
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 90
+
+      - name: Deploy retry
+        id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5
