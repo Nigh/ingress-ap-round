@@ -1,13 +1,18 @@
 <script lang="ts">
 	import {
-		ACTION_KINDS,
+		COST_KINDS,
 		ACTION_LABELS,
 		DEFAULT_COSTS,
+		DESTROY_AP,
 		GAP_MAX,
 		GUARANTEED_GAP,
 		GUARANTEED_GAP_DOUBLE,
 		type ActionKind,
+		type NearbyConfig,
+		type NearbyPortal,
 		buildActions,
+		clampNearby,
+		destroyApOf,
 		gapOf,
 		gapValid,
 		guaranteedGap,
@@ -15,10 +20,16 @@
 	import { formatSolution, type StepRow } from "../lib/format"
 	import { computePlans, type SolResult } from "../lib/solver"
 
+	const emptyPortal = (): NearbyPortal => ({ resonators: 8, mods: 0, links: 0 })
+
 	let currentAp = $state(0)
 	let targetAp = $state(5777)
 	let isDouble = $state(false)
 	let costs = $state({ ...DEFAULT_COSTS })
+	let useEnemy = $state(false)
+	let enemy = $state(emptyPortal())
+	let useMachina = $state(false)
+	let machina = $state(emptyPortal())
 	let error = $state("")
 	let results = $state<{ result: SolResult; steps: StepRow[] }[]>([])
 	let checked = $state<boolean[][]>([])
@@ -28,13 +39,28 @@
 	let guarantee = $derived(guaranteedGap(isDouble))
 	let curAp = $derived(Math.trunc(Number(currentAp)) || 0)
 
+	/** Full clear + Capture+8 preview (respects Double AP). */
+	function nearbyPreview(p: NearbyPortal, machinaPortal: boolean): number {
+		const d = destroyApOf(p)
+		const fill = (machinaPortal ? 675 + 1331 : 675) + 125 * 8 + 250
+		const total = d + fill
+		return isDouble ? total * 2 : total
+	}
+
+	function nearbyConfig(): NearbyConfig {
+		return {
+			enemy: useEnemy ? clampNearby(enemy) : null,
+			machina: useMachina ? clampNearby(machina) : null,
+		}
+	}
+
 	function resetCosts() {
 		costs = { ...DEFAULT_COSTS }
 	}
 
 	function sanitizeCosts(): Partial<Record<ActionKind, number>> {
 		const out: Partial<Record<ActionKind, number>> = {}
-		for (const k of ACTION_KINDS) {
+		for (const k of COST_KINDS) {
 			const n = Math.trunc(Number(costs[k]))
 			if (!Number.isFinite(n)) {
 				out[k] = DEFAULT_COSTS[k]
@@ -43,6 +69,11 @@
 			}
 		}
 		return out
+	}
+
+	function sanitizeNearbyInputs() {
+		if (useEnemy) enemy = clampNearby(enemy)
+		if (useMachina) machina = clampNearby(machina)
 	}
 
 	function checkedAp(solIdx: number): number {
@@ -66,13 +97,15 @@
 			error = `Need target > current, both ≥ 0, and gap ≤ ${GAP_MAX}.`
 			return
 		}
+		sanitizeNearbyInputs()
 		const g = gapOf(cur, tgt)
 		const costMap = sanitizeCosts()
 		costs = { ...DEFAULT_COSTS, ...costMap } as typeof costs
+		const nearby = nearbyConfig()
 		busy = true
 		queueMicrotask(() => {
-			const actions = buildActions(isDouble, costMap)
-			const plans = computePlans(g, isDouble, 3, costMap).filter((r) => r.diff === 0)
+			const actions = buildActions(isDouble, costMap, nearby)
+			const plans = computePlans(g, isDouble, 3, costMap, nearby).filter((r) => r.diff === 0)
 			if (plans.length === 0) {
 				error = "No exact solution for this gap."
 				busy = false
@@ -140,13 +173,118 @@
 			</p>
 		{/if}
 
+		<details class="rounded-box border border-base-content/10 bg-base-200/40" open>
+			<summary class="cursor-pointer px-3 py-2 text-sm font-medium">Nearby portals</summary>
+			<div class="flex flex-col gap-3 border-t border-base-content/10 px-3 py-3">
+				<p class="text-xs text-base-content/55">
+					Optional: up to one enemy and one Machina. Planner may clear → capture → deploy 1–8
+					resonators. Link ≤ 1. Destroy: {DESTROY_AP.resonator}/{DESTROY_AP.mod}/{DESTROY_AP.link} AP
+					(res/mod/link).
+				</p>
+
+				<div class="rounded-box border border-base-content/10 bg-base-100/60 p-3">
+					<label class="label cursor-pointer justify-start gap-3 py-0">
+						<input type="checkbox" class="toggle toggle-sm toggle-primary" bind:checked={useEnemy} />
+						<span class="label-text font-medium">Enemy portal</span>
+					</label>
+					{#if useEnemy}
+						<div class="mt-3 grid grid-cols-3 gap-2">
+							<label class="form-control">
+								<span class="label-text mb-1 text-xs">Resonators</span>
+								<input
+									type="number"
+									class="input input-bordered input-sm w-full font-mono"
+									min="0"
+									max="8"
+									step="1"
+									bind:value={enemy.resonators}
+								/>
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1 text-xs">Mods</span>
+								<input
+									type="number"
+									class="input input-bordered input-sm w-full font-mono"
+									min="0"
+									max="4"
+									step="1"
+									bind:value={enemy.mods}
+								/>
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1 text-xs">Links</span>
+								<input
+									type="number"
+									class="input input-bordered input-sm w-full font-mono"
+									min="0"
+									max="1"
+									step="1"
+									bind:value={enemy.links}
+								/>
+							</label>
+						</div>
+						<p class="mt-2 font-mono text-xs tabular-nums text-base-content/60">
+							Clear + fill 8 ≈ +{nearbyPreview(clampNearby(enemy), false)} AP
+						</p>
+					{/if}
+				</div>
+
+				<div class="rounded-box border border-base-content/10 bg-base-100/60 p-3">
+					<label class="label cursor-pointer justify-start gap-3 py-0">
+						<input type="checkbox" class="toggle toggle-sm toggle-primary" bind:checked={useMachina} />
+						<span class="label-text font-medium">Machina portal</span>
+					</label>
+					{#if useMachina}
+						<div class="mt-3 grid grid-cols-3 gap-2">
+							<label class="form-control">
+								<span class="label-text mb-1 text-xs">Resonators</span>
+								<input
+									type="number"
+									class="input input-bordered input-sm w-full font-mono"
+									min="0"
+									max="8"
+									step="1"
+									bind:value={machina.resonators}
+								/>
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1 text-xs">Mods</span>
+								<input
+									type="number"
+									class="input input-bordered input-sm w-full font-mono"
+									min="0"
+									max="4"
+									step="1"
+									bind:value={machina.mods}
+								/>
+							</label>
+							<label class="form-control">
+								<span class="label-text mb-1 text-xs">Links</span>
+								<input
+									type="number"
+									class="input input-bordered input-sm w-full font-mono"
+									min="0"
+									max="1"
+									step="1"
+									bind:value={machina.links}
+								/>
+							</label>
+						</div>
+						<p class="mt-2 font-mono text-xs tabular-nums text-base-content/60">
+							Clear + fill 8 ≈ +{nearbyPreview(clampNearby(machina), true)} AP
+						</p>
+					{/if}
+				</div>
+			</div>
+		</details>
+
 		<details class="rounded-box border border-base-content/10 bg-base-200/40">
 			<summary class="cursor-pointer px-3 py-2 text-sm font-medium">Action costs</summary>
 			<div class="flex flex-col gap-2 border-t border-base-content/10 px-3 py-3">
 				<p class="text-xs text-base-content/55">
 					Higher cost = planner avoids that action when possible (1–100).
 				</p>
-				{#each ACTION_KINDS as kind}
+				{#each COST_KINDS as kind}
 					<label class="flex items-center justify-between gap-3 text-sm">
 						<span class="min-w-0 flex-1 truncate">{ACTION_LABELS[kind]}</span>
 						<input
