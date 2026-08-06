@@ -1,4 +1,4 @@
-import { type ApAction } from "./actions"
+import { DESTROY_AP, type ApAction, type NearbyPortal } from "./actions"
 import { type SolResult, apAt } from "./solver"
 
 export type StepRow = {
@@ -46,6 +46,48 @@ function formatHack(count: number, unit: number): StepRow[] {
 	return rows
 }
 
+/** Scale destroy unit AP so parts sum to destroyAp (handles Double AP). */
+function destroyParts(p: NearbyPortal, destroyAp: number): { link: number; mod: number; res: number } {
+	const base =
+		p.links * DESTROY_AP.link + p.mods * DESTROY_AP.mod + p.resonators * DESTROY_AP.resonator
+	if (base <= 0 || destroyAp <= 0) return { link: 0, mod: 0, res: 0 }
+	const scale = destroyAp / base
+	return {
+		link: p.links * DESTROY_AP.link * scale,
+		mod: p.mods * DESTROY_AP.mod * scale,
+		res: p.resonators * DESTROY_AP.resonator * scale,
+	}
+}
+
+function formatNearby(count: number, v: ApAction): StepRow[] {
+	const p = v.nearby
+	const destroyAp = v.destroyAp ?? 0
+	if (!p || count <= 0) return []
+	const label = v.kind === "nearbyMachina" ? "Nearby Machina" : "Nearby Enemy"
+	const rows: StepRow[] = []
+	const parts = destroyParts(p, destroyAp)
+
+	if (p.links > 0) {
+		rows.push({ action: `Destroy Link · ${label}`, qty: `×${p.links}`, ap: parts.link })
+	}
+	if (p.mods > 0) {
+		rows.push({ action: `Destroy Mod · ${label}`, qty: `×${p.mods}`, ap: parts.mod })
+	}
+	if (p.resonators > 0) {
+		rows.push({
+			action: `Destroy Resonator · ${label}`,
+			qty: `×${p.resonators}`,
+			ap: parts.res,
+		})
+	}
+	rows.push({
+		action: `Capture ${label}`,
+		qty: `1 portal · ${pl(count, "Resonator")}`,
+		ap: apAt(v, count) - destroyAp,
+	})
+	return rows
+}
+
 export function formatSolution(actions: ApAction[], r: SolResult): StepRow[] {
 	const rows: StepRow[] = []
 	for (let i = 0; i < actions.length; i++) {
@@ -53,6 +95,10 @@ export function formatSolution(actions: ApAction[], r: SolResult): StepRow[] {
 		if (n <= 0) continue
 		const v = actions[i]
 		switch (v.kind) {
+			case "nearbyEnemy":
+			case "nearbyMachina":
+				rows.push(...formatNearby(n, v))
+				break
 			case "machina":
 				rows.push(...formatCapture(n, "Machina Portal", v.ap))
 				break

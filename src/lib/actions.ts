@@ -2,7 +2,16 @@ export const GAP_MAX = 10000
 export const GUARANTEED_GAP = 1688
 export const GUARANTEED_GAP_DOUBLE = 3376
 
+/** Wiki: Destroying an enemy Resonator / Portal Mod / Link. */
+export const DESTROY_AP = {
+	resonator: 75,
+	mod: 80,
+	link: 187,
+} as const
+
 export type ActionKind =
+	| "nearbyEnemy"
+	| "nearbyMachina"
 	| "machina"
 	| "white"
 	| "hack"
@@ -16,15 +25,34 @@ export type ActionKind =
 	| "res8"
 	| "upgrade"
 
+/** One nearby portal’s inventory. Links capped at 1. */
+export type NearbyPortal = {
+	resonators: number
+	mods: number
+	links: number
+}
+
+export type NearbyConfig = {
+	enemy?: NearbyPortal | null
+	machina?: NearbyPortal | null
+}
+
 export type ApAction = {
 	kind: ActionKind
 	stepMax: number
 	cost: number
 	ap: number[]
 	instruction: string
+	/** Hard cap on count (nearby: one portal, deploy 1–8 resonators). */
+	hardMax?: number
+	/** Destroy AP included in every capture step (after Double AP). */
+	destroyAp?: number
+	nearby?: NearbyPortal
 }
 
 export const DEFAULT_COSTS: Record<ActionKind, number> = {
+	nearbyEnemy: 1,
+	nearbyMachina: 1,
 	machina: 4,
 	white: 2,
 	hack: 1,
@@ -40,6 +68,8 @@ export const DEFAULT_COSTS: Record<ActionKind, number> = {
 }
 
 export const ACTION_LABELS: Record<ActionKind, string> = {
+	nearbyEnemy: "Nearby Enemy Portal",
+	nearbyMachina: "Nearby Machina Portal",
 	machina: "Capture Machina Portal",
 	white: "Capture White Portal",
 	hack: "Hack Portal",
@@ -53,6 +83,11 @@ export const ACTION_LABELS: Record<ActionKind, string> = {
 	res8: "Deploy 8th Resonator",
 	upgrade: "Upgrade Resonator",
 }
+
+/** Cost UI omits nearby kinds (configured under Nearby portals). */
+export const COST_KINDS = Object.keys(DEFAULT_COSTS).filter(
+	(k) => k !== "nearbyEnemy" && k !== "nearbyMachina",
+) as ActionKind[]
 
 export const ACTION_KINDS = Object.keys(DEFAULT_COSTS) as ActionKind[]
 
@@ -72,42 +107,88 @@ export function guaranteedGap(double: boolean): number {
 	return double ? GUARANTEED_GAP_DOUBLE : GUARANTEED_GAP
 }
 
+function clampInt(n: number, lo: number, hi: number): number {
+	if (!Number.isFinite(n)) return lo
+	return Math.min(hi, Math.max(lo, Math.trunc(n)))
+}
+
+export function clampNearby(p: NearbyPortal): NearbyPortal {
+	return {
+		resonators: clampInt(p.resonators, 0, 8),
+		mods: clampInt(p.mods, 0, 4),
+		links: clampInt(p.links, 0, 1),
+	}
+}
+
+export function destroyApOf(p: NearbyPortal): number {
+	const c = clampNearby(p)
+	return (
+		c.links * DESTROY_AP.link + c.mods * DESTROY_AP.mod + c.resonators * DESTROY_AP.resonator
+	)
+}
+
+function captureSchedule(machina: boolean): number[] {
+	const bonus = machina ? 1331 : 0
+	return [
+		675 + bonus + 125 * 1,
+		675 + bonus + 125 * 2,
+		675 + bonus + 125 * 3,
+		675 + bonus + 125 * 4,
+		675 + bonus + 125 * 5,
+		675 + bonus + 125 * 6,
+		675 + bonus + 125 * 7,
+		675 + bonus + 125 * 8 + 250,
+	]
+}
+
+function nearbyAction(
+	kind: "nearbyEnemy" | "nearbyMachina",
+	p: NearbyPortal,
+	cost: number,
+): ApAction {
+	const nearby = clampNearby(p)
+	const destroyAp = destroyApOf(nearby)
+	const schedule = captureSchedule(kind === "nearbyMachina")
+	return {
+		kind,
+		stepMax: 8,
+		hardMax: 8,
+		cost,
+		ap: schedule.map((x) => x + destroyAp),
+		destroyAp,
+		nearby,
+		instruction: ACTION_LABELS[kind],
+	}
+}
+
 export function buildActions(
 	double: boolean,
 	costs?: Partial<Record<ActionKind, number>>,
+	nearby?: NearbyConfig,
 ): ApAction[] {
 	const c = { ...DEFAULT_COSTS, ...costs }
-	const out: ApAction[] = [
+	const out: ApAction[] = []
+
+	if (nearby?.enemy) {
+		out.push(nearbyAction("nearbyEnemy", nearby.enemy, c.nearbyEnemy))
+	}
+	if (nearby?.machina) {
+		out.push(nearbyAction("nearbyMachina", nearby.machina, c.nearbyMachina))
+	}
+
+	out.push(
 		{
 			kind: "machina",
 			stepMax: 4,
 			cost: c.machina,
-			ap: [
-				675 + 1331 + 125 * 1,
-				675 + 1331 + 125 * 2,
-				675 + 1331 + 125 * 3,
-				675 + 1331 + 125 * 4,
-				675 + 1331 + 125 * 5,
-				675 + 1331 + 125 * 6,
-				675 + 1331 + 125 * 7,
-				675 + 1331 + 125 * 8 + 250,
-			],
+			ap: captureSchedule(true),
 			instruction: ACTION_LABELS.machina,
 		},
 		{
 			kind: "white",
 			stepMax: 0,
 			cost: c.white,
-			ap: [
-				675 + 125 * 1,
-				675 + 125 * 2,
-				675 + 125 * 3,
-				675 + 125 * 4,
-				675 + 125 * 5,
-				675 + 125 * 6,
-				675 + 125 * 7,
-				675 + 125 * 8 + 250,
-			],
+			ap: captureSchedule(false),
 			instruction: ACTION_LABELS.white,
 		},
 		{ kind: "hack", stepMax: 0, cost: c.hack, ap: [100], instruction: ACTION_LABELS.hack },
@@ -120,11 +201,12 @@ export function buildActions(
 		{ kind: "res27", stepMax: 0, cost: c.res27, ap: [125], instruction: ACTION_LABELS.res27 },
 		{ kind: "res8", stepMax: 4, cost: c.res8, ap: [125 + 250], instruction: ACTION_LABELS.res8 },
 		{ kind: "upgrade", stepMax: 4, cost: c.upgrade, ap: [65], instruction: ACTION_LABELS.upgrade },
-	]
+	)
 
 	if (double) {
 		for (const a of out) {
 			a.ap = a.ap.map((x) => x * 2)
+			if (a.destroyAp != null) a.destroyAp *= 2
 		}
 	}
 	return out

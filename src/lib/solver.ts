@@ -1,4 +1,4 @@
-import { type ActionKind, type ApAction, buildActions } from "./actions"
+import { type ActionKind, type ApAction, type NearbyConfig, buildActions } from "./actions"
 
 export type SolResult = {
 	sol: number[]
@@ -44,12 +44,13 @@ function maxCount(v: ApAction, limit: number): number {
 	if (limit <= 0 || v.ap.length === 0 || v.ap[0] <= 0) return 0
 	let lo = 0
 	let hi = Math.floor(limit / v.ap[0]) + v.ap.length
+	if (v.hardMax != null) hi = Math.min(hi, v.hardMax)
 	while (lo < hi) {
 		const mid = Math.floor((lo + hi + 1) / 2)
 		if (apAt(v, mid) <= limit) lo = mid
 		else hi = mid - 1
 	}
-	return lo
+	return v.hardMax != null ? Math.min(lo, v.hardMax) : lo
 }
 
 function absInt(x: number): number {
@@ -170,8 +171,9 @@ export function computePlans(
 	double: boolean,
 	want = 3,
 	costs?: Partial<Record<ActionKind, number>>,
+	nearby?: NearbyConfig,
 ): SolResult[] {
-	const actions = buildActions(double, costs)
+	const actions = buildActions(double, costs, nearby)
 	const primary = plan(actions, target, double, -1)
 	return alternatives(actions, target, double, primary, want)
 }

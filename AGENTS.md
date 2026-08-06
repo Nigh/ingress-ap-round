@@ -27,9 +27,9 @@ Repo: https://github.com/Nigh/ingress-ap-round
 
 | Path | Role |
 |------|------|
-| `src/lib/actions.ts` | AP tables, costs defaults, gap validation, guarantee constants |
-| `src/lib/solver.ts` | Grouped knapsack DP, `plan` / `alternatives` / `computePlans` |
-| `src/lib/format.ts` | Solution rows `{ action, qty, ap, passcode? }` |
+| `src/lib/actions.ts` | AP tables, destroy AP, nearby portals, costs, gap validation, guarantee constants |
+| `src/lib/solver.ts` | Grouped knapsack DP (`hardMax`), `plan` / `alternatives` / `computePlans` |
+| `src/lib/format.ts` | Solution rows `{ action, qty, ap, passcode? }` including nearby destroy+capture |
 | `src/lib/selfcheck.ts` | Assert-based solver check (`npm run check:solver`) |
 | `src/components/ApCalculator.svelte` | Main UI |
 | `src/components/StarLink.astro` | Top-left GitHub Star link |
@@ -43,19 +43,22 @@ Repo: https://github.com/Nigh/ingress-ap-round
 ## Product rules (must match code)
 
 - Gap = `targetAP - currentAP`. Valid iff both are non-negative integers, `target > current`, and `gap ≤ 10000` (`GAP_MAX`).
-- Exact solutions **guaranteed** for gap ≥ **1688** (normal) or ≥ **3376** (Double AP). Smaller gaps may still solve.
+- Exact solutions **guaranteed** for gap ≥ **1688** (normal) or ≥ **3376** (Double AP). Smaller gaps may still solve. Nearby portals do **not** change guarantee claims.
 - Double AP: all action AP ×2. Default toggle **off**.
 - Odd gap + Double AP: force **at most one** official **1 AP passcode** (not a knapsack item; special UI row).
-- Action **cost** weights: integers **1–100**, defaults in `DEFAULT_COSTS`; higher → planner avoids when possible.
+- Action **cost** weights: integers **1–100**, defaults in `DEFAULT_COSTS`; higher → planner avoids when possible. Cost UI uses `COST_KINDS` (excludes nearby kinds).
+- **Nearby portals** (optional): at most one **enemy** and one **Machina**. Fields: resonators **0–8**, mods **0–4**, links **0–1**. Each enabled portal → one `ApAction` (`nearbyEnemy` / `nearbyMachina`) with `hardMax: 8`. AP schedule = destroy inventory + Capture+1…8 resonators (same capture formula as white/machina). Destroy AP (wiki): res **75**, mod **80**, link **187**. Using the portal always clears configured inventory first; capture depth 1–8 is chosen by the solver. Default cost **1** (prefer nearby).
 - Show up to **3** plans; **only `diff === 0`**. Header shows cost / AP badges, not diff.
 - Solution steps are **checkboxes**. Checked AP sum + current AP is shown as expected total (“should be at”) for in-game verification.
-- Mod AP is **125** (wiki: Applying a Portal Mod). Other base AP values align with Ingress Access Points wiki (capture 675, resonator 125, complete +250, upgrade 65, link 313, field 1250, allied hack 100 / enemy 200, Machina recapture +1331, boost/beacon 500).
+- Mod deploy AP is **125** (wiki: Applying a Portal Mod). Other base AP values align with Ingress Access Points wiki (capture 675, resonator 125, complete +250, upgrade 65, link 313, field 1250, allied hack 100 / enemy 200, Machina recapture +1331, boost/beacon 500).
 
 ## Solver
 
 - Lexicographic: minimize `|ap - gap|`, then minimize total cost.
+- `hardMax` on an action caps knapsack count (nearby portals).
 - Passcode path: `plan` solves `gap - 1` when double && odd, then attaches passcode.
 - Alternatives: re-solve forbidding one used action; sort by diff then cost.
+- `computePlans(target, double, want, costs?, nearby?)` passes nearby into `buildActions`.
 
 ## Commands
 
