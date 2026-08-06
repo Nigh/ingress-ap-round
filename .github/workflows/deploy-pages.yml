@@ -31,6 +31,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Branch Pages runs Jekyll; without this, `_astro/` is omitted.
+      - name: Add .nojekyll
+        run: touch dist/.nojekyll
+
       # Bypass actions/deploy-pages (stuck at deployment_queued — deploy-pages#406).
       - name: Publish dist to gh-pages
         env:

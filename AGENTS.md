@@ -20,8 +20,9 @@ Repo: https://github.com/Nigh/ingress-ap-round
 - Template origin: `Nigh/astro-pwa-template`
 - Node **24+** for CI (`npm ci` / `npm run build`)
 - Deploy: GitHub Pages on push to `main` — [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)  
-  Build with Node 24, then force-push `dist/` to the `gh-pages` branch (Pages source: `gh-pages` / `/`).  
-  Does **not** use `actions/deploy-pages` (intermittently stuck at `deployment_queued`; see [actions/deploy-pages#406](https://github.com/actions/deploy-pages/issues/406)).
+  Build with Node 24, write `dist/.nojekyll`, then force-push `dist/` to the `gh-pages` branch (Pages source: `gh-pages` / `/`).  
+  Does **not** use `actions/deploy-pages` (intermittently stuck at `deployment_queued`; see [actions/deploy-pages#406](https://github.com/actions/deploy-pages/issues/406)).  
+  `.nojekyll` is required so Jekyll does not drop `_astro/`.
 - Astro `site`: `https://nigh.github.io`, `base`: `/ingress-ap-round`
 
 ## Layout (source of truth)
