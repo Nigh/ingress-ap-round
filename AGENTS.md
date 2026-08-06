@@ -20,7 +20,8 @@ Repo: https://github.com/Nigh/ingress-ap-round
 - Template origin: `Nigh/astro-pwa-template`
 - Node **24+** for CI (`npm ci` / `npm run build`)
 - Deploy: GitHub Pages on push to `main` — [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)  
-  Actions: `checkout@v7`, `setup-node@v7`, `upload-pages-artifact@v5`, `deploy-pages@v5`
+  Actions: `checkout@v7`, `setup-node@v7`, `upload-pages-artifact@v5`, `deploy-pages@v5`  
+  Deploy step retries once after 90s if Pages sticks at `deployment_queued` ([actions/deploy-pages#406](https://github.com/actions/deploy-pages/issues/406)).
 - Astro `site`: `https://nigh.github.io`, `base`: `/ingress-ap-round`
 
 ## Layout (source of truth)
