@@ -1,10 +1,13 @@
 # Ingress AP Round
+<img width="1847" height="852" alt="AP_round" src="https://github.com/user-attachments/assets/835d050b-62da-4ac5-a3db-81b0768c5fd6" />
 
 Plan in-game Ingress actions to earn a **specific amount of AP** — from your current total to a target.
 
 **Use it:** https://nigh.github.io/ingress-ap-round/
 
 ## How to use
+
+<img width="579" height="888" alt="p1" src="https://github.com/user-attachments/assets/a4609f5c-533e-40cb-a721-dbbe80b82524" />
 
 1. Enter your **Current AP** and **Target AP** (target must be higher; the gap can be at most 10 000).
 2. Turn on **Double AP event** only if a Double AP event is active in-game (off by default).
