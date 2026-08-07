@@ -7,6 +7,9 @@
 		GAP_MAX,
 		GUARANTEED_GAP,
 		GUARANTEED_GAP_DOUBLE,
+		NEARBY_LINK_MIN_RES,
+		NEARBY_RES_MAX,
+		NEARBY_RES_MIN,
 		type ActionKind,
 		type NearbyConfig,
 		type NearbyPortal,
@@ -20,9 +23,11 @@
 	import { formatSolution, type StepRow } from "../lib/format"
 	import { computePlans, type SolResult } from "../lib/solver"
 
-	const RES_OPTS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const
+	const RES_OPTS = Array.from(
+		{ length: NEARBY_RES_MAX - NEARBY_RES_MIN + 1 },
+		(_, i) => NEARBY_RES_MIN + i,
+	)
 	const MOD_OPTS = [0, 1, 2, 3, 4] as const
-	const LINK_OPTS = [0, 1] as const
 
 	let currentAp = $state(0)
 	let targetAp = $state(5777)
@@ -40,6 +45,15 @@
 	let gap = $derived(gapOf(Math.trunc(Number(currentAp)), Math.trunc(Number(targetAp))))
 	let guarantee = $derived(guaranteedGap(isDouble))
 	let curAp = $derived(Math.trunc(Number(currentAp)) || 0)
+	let enemyLinkOpts = $derived(enemy.resonators >= NEARBY_LINK_MIN_RES ? [0, 1] : [0])
+	let machinaLinkOpts = $derived(machina.resonators >= NEARBY_LINK_MIN_RES ? [0, 1] : [0])
+
+	$effect(() => {
+		if (enemy.resonators < NEARBY_LINK_MIN_RES && enemy.links !== 0) enemy.links = 0
+	})
+	$effect(() => {
+		if (machina.resonators < NEARBY_LINK_MIN_RES && machina.links !== 0) machina.links = 0
+	})
 
 	/** Full clear + Capture+8 preview (respects Double AP). */
 	function nearbyPreview(p: NearbyPortal, machinaPortal: boolean): number {
@@ -180,7 +194,8 @@
 			<div class="flex flex-col gap-3 border-t border-base-content/10 px-3 py-3">
 				<p class="text-xs text-base-content/55">
 					Optional: up to one enemy and one Machina. Planner may clear → capture → deploy 1–8
-					resonators. Link ≤ 1. Destroy: {DESTROY_AP.resonator}/{DESTROY_AP.mod}/{DESTROY_AP.link} AP
+					resonators. Res {NEARBY_RES_MIN}–{NEARBY_RES_MAX}; link ≤ 1 and only if res ≥
+					{NEARBY_LINK_MIN_RES}. Destroy: {DESTROY_AP.resonator}/{DESTROY_AP.mod}/{DESTROY_AP.link} AP
 					(res/mod/link).
 				</p>
 
@@ -210,7 +225,7 @@
 							<label class="form-control">
 								<span class="label-text mb-1 text-xs">Links</span>
 								<select class="select select-bordered select-sm w-full font-mono" bind:value={enemy.links}>
-									{#each LINK_OPTS as n}
+									{#each enemyLinkOpts as n}
 										<option value={n}>{n}</option>
 									{/each}
 								</select>
@@ -248,7 +263,7 @@
 							<label class="form-control">
 								<span class="label-text mb-1 text-xs">Links</span>
 								<select class="select select-bordered select-sm w-full font-mono" bind:value={machina.links}>
-									{#each LINK_OPTS as n}
+									{#each machinaLinkOpts as n}
 										<option value={n}>{n}</option>
 									{/each}
 								</select>

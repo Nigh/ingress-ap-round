@@ -4,6 +4,7 @@ import {
 	GUARANTEED_GAP,
 	GUARANTEED_GAP_DOUBLE,
 	buildActions,
+	clampNearby,
 	destroyApOf,
 	gapValid,
 	guaranteedGap,
@@ -68,6 +69,13 @@ assert(!gapValid(-1, 10), "negative current bad")
 		"higher hack cost affects plan",
 	)
 	assert(totalCost(actionsPricey, priceyHack.sol) === priceyHack.cost, "cost matches")
+}
+
+{
+	const low = clampNearby({ resonators: 2, mods: 1, links: 1 })
+	assert(low.resonators === 2 && low.links === 0, "links cleared when res < 3")
+	assert(clampNearby({ resonators: 0, mods: 0, links: 0 }).resonators === 1, "res min 1")
+	assert(clampNearby({ resonators: 3, mods: 0, links: 1 }).links === 1, "links ok at res 3")
 }
 
 {
