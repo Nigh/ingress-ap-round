@@ -25,12 +25,17 @@ export type ActionKind =
 	| "res8"
 	| "upgrade"
 
-/** One nearby portal’s inventory. Links capped at 1. */
+/** One nearby portal’s inventory. Links capped at 1; need ≥3 resonators. */
 export type NearbyPortal = {
 	resonators: number
 	mods: number
 	links: number
 }
+
+export const NEARBY_RES_MIN = 1
+export const NEARBY_RES_MAX = 8
+/** Ingress: attached links fail when resonators drop below 3. */
+export const NEARBY_LINK_MIN_RES = 3
 
 export type NearbyConfig = {
 	enemy?: NearbyPortal | null
@@ -114,11 +119,10 @@ function clampInt(n: number, lo: number, hi: number): number {
 }
 
 export function clampNearby(p: NearbyPortal): NearbyPortal {
-	return {
-		resonators: clampInt(p.resonators, 0, 8),
-		mods: clampInt(p.mods, 0, 4),
-		links: clampInt(p.links, 0, 1),
-	}
+	const resonators = clampInt(p.resonators, NEARBY_RES_MIN, NEARBY_RES_MAX)
+	const mods = clampInt(p.mods, 0, 4)
+	const links = resonators < NEARBY_LINK_MIN_RES ? 0 : clampInt(p.links, 0, 1)
+	return { resonators, mods, links }
 }
 
 export function destroyApOf(p: NearbyPortal): number {
