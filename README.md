@@ -31,3 +31,7 @@ Smaller gaps often still work; if nothing exact exists, the app tells you. Nearb
 ## Privacy
 
 Everything runs in your browser. Nothing is uploaded.
+
+## License
+
+[MIT](LICENSE)

@@ -11,7 +11,8 @@ Also update the user-facing [`README.md`](README.md) when end-user-visible behav
 ## What this is
 
 Browser PWA that plans Ingress in-game actions to earn an **exact AP gap** between *current AP* and *target AP*. Live site: https://nigh.github.io/ingress-ap-round/  
-Repo: https://github.com/Nigh/ingress-ap-round
+Repo: https://github.com/Nigh/ingress-ap-round  
+License: **MIT** ([`LICENSE`](LICENSE))
 
 ## Stack
 

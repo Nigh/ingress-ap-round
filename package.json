@@ -2,6 +2,7 @@
   "name": "ingress-ap-round",
   "type": "module",
   "version": "0.1.0",
+  "license": "MIT",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
